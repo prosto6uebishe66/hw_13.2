@@ -4,7 +4,6 @@ class Category:
         self.description = description
         self.total_categories = 0
         self.unique_products = set()
-        # Вместо этого используем private attribute
         self._products = []
         if products is not None:
             self._products = products
@@ -30,6 +29,7 @@ class Category:
         for product in self._products:
             print(f'{product.name}, {product.price} руб. Остаток: {product.quantity} шт.')
 
+
 class Product:
     def __init__(self, name, description='', price=0, quantity=0):
         self.name = name
@@ -37,9 +37,21 @@ class Product:
         self.price = price
         self.quantity = quantity
 
+    @property
+    def price(self):
+        return self._price
+
+    @price.setter
+    def price(self, value):
+        if not isinstance(value, int) or value <= 0:
+            raise ValueError("Цена должна быть больше 0р")
+        self._price = value
+
     def create_product(self, name, description='', price=0, quantity=0):
         new_product = Product(name, description, price, quantity)
         return new_product
+
+
 
 electronics_category = Category('Электроника')
 furniture_category = Category('Мебель')
@@ -51,7 +63,7 @@ chair = Product.create_product('Кресло', 'Кресло для отдыха
 
 # Добавление продуктов в категории
 electronics_category.add_product(tv)
-electronics_category.add_product(sofa)
+furniture_category.add_product(sofa)
 furniture_category.add_product(chair)
 
 print("Всего категорий:", electronics_category.total_categories + furniture_category.total_categories)
