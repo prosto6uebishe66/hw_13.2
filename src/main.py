@@ -1,3 +1,6 @@
+from abc import ABC, abstractclassmethod
+
+
 class Category:
     def __init__(self, name, description='', products=None):
         self.name = name
@@ -41,15 +44,42 @@ class Category:
             print(f'{product.name}, {product.price} руб. Остаток: {product.quantity} шт.')
 
     def __str__(self):
+
         return f'{self.name}, количество продуктов: {len(self._products)} шт.'
 
+class ObjectCriationLoggerMixin:
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-class Product:
-    def __init__(self, name, description='', price=0, quantity=0):
+        class_name = self.__class__.__name__
+
+        args_str = ', '.join(map(str, args))
+        kwargs_str = ', '.join(f'{k}={v}' for k, v in kwargs.items())
+
+        all_args = ', '.join([args_str, kwargs_str])
+
+        if not all_args:
+            all_args = ''
+
+class AbstractProduct(ABC):
+    def __init__(self, name, manufacturer, quantity, description):
         self.name = name
-        self.description = description
-        self.price = price
+        self.manufacturer = manufacturer
         self.quantity = quantity
+        self.description = description
+
+        @abstractclassmethod
+        def get_description(self):
+            pass
+
+class Product(AbstractProduct):
+    def __init__(self, name, description, price, quantity, manufacturer, category):
+        super().__init__(name, description, quantity, manufacturer)
+        self.price = price
+        self.category = category
+
+    def get_description(self):
+        return f"{self.name} (OT {self.category}, price: {self.price})"
 
     def __iadd__(self, other):
         if not  isinstance(other, type(self)):
@@ -77,37 +107,37 @@ class Product:
             raise TypeError("Можно складывать только объекты Product")
         return self.cost + other.cost
 
-    def create_product(self, name, description='', price=0, quantity=0):
+    def create_product(self, name, description, price, quantity):
         new_product = Product(name, description, price, quantity)
         return new_product
 
 class Smartphone(Product):
-    def __init__(self, name, description='', price=0, quantity=0, performance=0.0, model='', storage_capacity=0,
+    def __init__(self, name, description, price, quantity, manufacturer, category, performance, model, storage_capacity,
                  color=''):
-        super().__init__(name, description, price, quantity)
+        super().__init__(name, description, price, quantity, manufacturer, category)
         self.performance = performance
         self.model = model
         self.storage_capacity = storage_capacity
         self.color = color
 
     def str(self):
-        return (f"{self.name}, {self.description}, {self.price} руб., {self.quantity} шт.\n"
+        return (f"{self.category}, {self.name}, {self.description}, {self.price} руб., {self.quantity} шт.\n"
                 f"Производительность: {self.performance}\n"
+                f"Производитель: {self.manufacturer}"
                 f"Модель: {self.model}\n"
                 f"Встроенная память: {self.storage_capacity} ГБ\n"
                 f"Цвет: {self.color}")
 
 class Grass(Product):
-    def __init__(self, name, description='', price=0, quantity=0, country_of_origin='', germination_time=0,
+    def __init__(self, name='', description='', price=0, quantity=0, manufacturer='', category='', germination_time=0,
                  color=''):
-        super().__init__(name, description, price, quantity)
-        self.country_of_origin = country_of_origin
+        super().__init__(name, description, price, quantity, manufacturer, category)
         self.germination_time = germination_time
         self.color = color
 
     def str(self):
         return (f"{self.name}, {self.description}, {self.price} руб., {self.quantity} шт.\n"
-                f"Страна производитель: {self.country_of_origin}\n"
+                f"Страна производитель: {self.manufacturer}\n"
                 f"Срок прорастания: {self.germination_time} дней\n"
                 f"Цвет: {self.color}")
 
@@ -115,8 +145,7 @@ class Grass(Product):
 all_category = []
 electronics_category = Category('Электроника')
 all_category.append(electronics_category)
-furniture_category = Category('Мебель')
-all_category.append(furniture_category)
+
 garden_category = Category('Садовые товары')
 all_category.append(garden_category)
 
@@ -124,6 +153,8 @@ all_category.append(garden_category)
 # Создание продуктов
 #Телефоны
 iphone_13 = Smartphone(
+    category="Смартфон",
+    manufacturer="США",
     name='Iphone 13',
     description= 'Флагман от Apple',
     price= 100000,
@@ -134,55 +165,67 @@ iphone_13 = Smartphone(
     color='Graphite'
 )
 samsung_a12 = Smartphone(
+    category="Смартфон",
+    manufacturer="Южная Корея",
     name='Samsung_a12',
     description='взрывной смартфон',
     price=5000,
-    quantity=256,
+    performance=7.2,
+    model='Samsung a12',
+    storage_capacity=64,
+    quantity=12,
     color='Blue Sky'
 )
 #Травы
 premium_grass_mix = Grass(
+    category="Газон для сада",
     name='Премиум газонная трава',
     description='Смесь высококачественных сортов газонных трав',
     price=2500,
     quantity=40,
-    country_of_origin='Германия',
+    manufacturer='Германия',
     germination_time=14,
     color='Темно-зеленый'
 )
 eco_lawn= Grass(
+    category="Газон для сада",
     name='Эко-газон',
     description='Экольогичная смесь газонных трав',
     price=1800,
     quantity=60,
-    country_of_origin='Россия',
+    manufacturer='Россия',
     germination_time=18,
     color='Светло-зеленая'
 )
-tv = Product.create_product('Телевизор Samsung QLED', 'Телевизор с разрешением 4K', 123456, 99999, 670)
-sofa = Product.create_product('Диван', 'Комфортный диван для гостиной', 5648156, 24999, 1500)
-chair = Product.create_product('Кресло', 'Кресло для отдыха', 456814454, 17900, 800)
 
 # Добавление продуктов в категории
 electronics_category.add_product(iphone_13)
 electronics_category.add_product(samsung_a12)
-electronics_category.add_product(tv)
+
 garden_category.add_product(premium_grass_mix)
 garden_category.add_product(eco_lawn)
-furniture_category.add_product(sofa)
-furniture_category.add_product(chair)
+
 
 #подсчет количества общей цены продукции на складе
-all_products_price = chair.price * chair.quantity + sofa.price * sofa.quantity + tv.price * tv.quantity + iphone_13.price * iphone_13.quantity + samsung_a12.price * samsung_a12.quantity + premium_grass_mix.price * premium_grass_mix.quantity + eco_lawn.price * eco_lawn.quantity
+all_phone_price= iphone_13.price * iphone_13.quantity + samsung_a12.price * samsung_a12.quantity
+all_garden_price= premium_grass_mix.price * premium_grass_mix.quantity + eco_lawn.price * eco_lawn.quantity
+all_products_price = all_garden_price + all_phone_price
 
 print(f"Всего категорий: {all_category.__len__()}")
-print("Уникальные продукты:", electronics_category.__len__() + furniture_category.__len__() + garden_category.__len__())
+print("Уникальные продукты:", electronics_category.__len__()  + garden_category.__len__())
 # Вывод списка товаров в категориях
 electronics_category.list_products()
 garden_category.list_products()
-furniture_category.list_products()
+
+print(Product(iphone_13.name, iphone_13.description, iphone_13.price, iphone_13.quantity, iphone_13.manufacturer,
+              iphone_13.category))
+print(Product(samsung_a12.name, samsung_a12.description, samsung_a12.price, samsung_a12.quantity, samsung_a12.manufacturer,
+              samsung_a12.category))
+print(Product(premium_grass_mix.name, premium_grass_mix.description, premium_grass_mix.price, premium_grass_mix.quantity, premium_grass_mix.manufacturer,
+              premium_grass_mix.category))
+print(Product(eco_lawn.name, eco_lawn.description, eco_lawn.price, eco_lawn.quantity, eco_lawn.manufacturer,
+              eco_lawn.category))
 
 print(f'Садовые товары, количество продуктов: {garden_category.__len__()}')
 print(f'Электроника, количество продуктов: {electronics_category.__len__()}')
-print(f'Мебель, количество продуктов: {furniture_category.__len__()}')
 print(f'Всего на складе продукции на {all_products_price}р')

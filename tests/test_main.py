@@ -1,96 +1,184 @@
 import pytest
 
-from src.main import Category
+from builtins import len
+from src.main import Category, Product, Smartphone, ObjectCriationLoggerMixin
 
-from src.main import Product
+
+
+@pytest.fixture
+def category():
+    return Category('Электроника', 'Техника для дома и офиса')
 
 
 @pytest.fixture
-def setup_category():
-    electronics_category = Category('Электроника')
-    furniture_category = Category('Мебель')
-    yield electronics_category, furniture_category
+def product(category):
+    return Product('Телефон', 'Apple', 10000, 20, 'Современный смартфон', category)
+
 
 @pytest.fixture
-def setup_products():
-    tv = Product('Телевизор Samsung QLED', 'Телевизор с разрешением 4K', 99999, 5)
-    sofa = Product('Диван', 'Комфортный диван для гостиной', 24999, 15)
-    chair = Product('Кресло', 'Кресло для отдыха', 17900, 6)
-    yield tv, sofa, chair
+def smartphone(category):
+    return Smartphone('iPhone X', 'Смартфон Apple', 50000, 15, 'Apple', category, 'Высокая', 'X', '128 GB', 'Черный')
 
-def test_add_products(setup_category, setup_products):
-    electronics_category, furniture_category = setup_category
-    tv, sofa, chair = setup_products
 
-    electronics_category.add_product(tv)
-    electronics_category.add_product(sofa)
-    furniture_category.add_product(chair)
+# Тесты для класса Category
+def test_add_product_to_category(category, product):
+    category.add_product(product)
+    assert product in category.get_all_products()
+    assert product in category.unique_products
+    assert len(category.get_all_products()) == 1
+    assert category.total_categories == 1
+    with pytest.raises(TypeError):
+        category.add_product('Не продукт')
 
-    assert electronics_category.total_categories == 2
-    assert electronics_category.total_unique_products == 2
-    assert furniture_category.total_categories == 1
-    assert furniture_category.total_unique_products == 1
 
-def test_clear_data(setup_category, setup_products):
-    electronics_category, furniture_category = setup_category
-    tv, sofa, chair = setup_products
+def test_remove_product_from_category(category, product):
+    category.add_product(product)
+    category.remove_product(product)
+    assert len(category.get_all_products()) == 0
+    with pytest.raises(ValueError):
+        category.remove_product('Некорректный продукт')
 
-    electronics_category.add_product(tv)
-    electronics_category.add_product(sofa)
-    furniture_category.add_product(chair)
 
-    electronics_category.clear_data()
-    furniture_category.clear_data()
+def test_clear_data(category, product):
+    category.clear_data()
+    category.add_product(product)
+    assert len(category.get_all_products()) > 0
+    category.clear_data()
+    assert len(category.get_all_products()) == 0
 
-    assert electronics_category.total_categories == 0
-    assert electronics_category.total_unique_products == 0
-    assert furniture_category.total_categories == 0
-    assert furniture_category.total_unique_products == 0
 
-@pytest.mark.parametrize("name, desc, prod", [
-    ("Электроника", "", None),
-    ("Мебель", "", None),
-])
-def test_category_initialization(name, desc, prod):
-    category = Category(name, desc, prod)
-    assert category.name == name
-    assert category.description == desc
-    assert category.total_categories == 0
-    assert category.unique_products == set()
+def test_list_products(category, product, capsys):
+    category.list_products()
+    captured = capsys.readouterr()
+    output = captured.out.strip()
+    expected_output = ""
+    assert output == expected_output
 
-def test_category_adding_products():
-    electronics_category = Category('Электроника')
-    furniture_category = Category('Мебель')
+    category.add_product(product)
+    category.list_products()
+    captured = capsys.readouterr()
+    output = captured.out.strip()
+    expected_output = f"Телефон, 10000 руб. Остаток: 20 шт."
+    assert output == expected_output
 
-    tv = Product('Телевизор Samsung QLED', 'Телевизор с разрешением 4K', 69999, 10)
-    sofa = Product('Диван', 'Комфортный диван для гостиной', 39999, 2)
-    chair = Product('Кресло', 'Кресло для отдыха', 19999, 3)
 
-    electronics_category.add_product(tv)
-    electronics_category.add_product(sofa)
-    furniture_category.add_product(chair)
+def test_total_unique_products(category):
+    product_1 = Product('Ноутбук', 'Портативный компьютер', 30000, 30, 'Lenovo', category)
+    product_2 = Product('Планшет', 'Таблетка', 15000, 40, 'Samsung', category)
 
-    assert electronics_category.total_categories == 2
-    assert electronics_category.total_unique_products == 2
-    assert furniture_category.total_categories == 1
-    assert furniture_category.total_unique_products == 1
+    category.add_product(product_1)
+    category.add_product(product_2)
+    assert len(set([product_1, product_2])) == category.total_unique_products
 
-def test_category_clear_data():
-    electronics_category = Category('Электроника')
-    furniture_category = Category('Мебель')
 
-    tv = Product('Телевизор Samsung QLED', 'Телевизор с разрешением 4K', 69999, 10)
-    sofa = Product('Диван', 'Комфортный диван для гостиной', 39999, 2)
-    chair = Product('Кресло', 'Кресло для отдыха', 19999, 3)
+def test_str_representation(category):
+    expected_string = 'Электроника, количество продуктов: 0 шт.'
+    assert str(category) == expected_string
 
-    electronics_category.add_product(tv)
-    electronics_category.add_product(sofa)
-    furniture_category.add_product(chair)
 
-    electronics_category.clear_data()
-    furniture_category.clear_data()
+# Тесты для класса Product
+def test_product_init(product):
+    assert product.name == 'Телефон'
+    assert product.description == 'Современный смартфон'
+    assert product.price == 10000
+    assert product.quantity == 20
+    assert product.manufacturer == 'Apple'
 
-    assert electronics_category.total_categories == 0
-    assert electronics_category.total_unique_products == 0
-    assert furniture_category.total_categories == 0
-    assert furniture_category.total_unique_products == 0
+def test_iadd(product):
+    another_product = Product("Другое устройство", "", 2000, 50, "Another Manufacturer", "")
+    result = product + another_product
+    expected_result = 300000
+    assert result == expected_result
+
+    with pytest.raises(TypeError):
+        product + "Not a product"
+
+
+def test_cost_property(product):
+    cost = product.cost
+    assert cost == 200000
+
+
+def test_set_cost_invalid_value(product):
+    with pytest.raises(ValueError):
+        product.cost = -1
+
+    def test_repr(product):
+        repr_string = repr(product)
+        expected_repr = "Product('Телефон', 'Современный смартфон', 10000, 20)"
+        assert repr_string == expected_repr
+
+    def test_add_method(product):
+        second_product = Product(
+            'Другой телефон',
+            'Еще один современный смартфон',
+            8000,
+            25,
+            'Samsung',
+            category
+        )
+        total_cost = product.add(second_product)
+        expected_cost = 320000
+        assert total_cost == expected_cost
+
+    def test_create_product(product):
+        new_product = product.create_product('Новый товар', 'Описания нет', 7000, 35)
+        assert new_product.name == 'Новый товар'
+        assert new_product.description == 'Описания нет'
+        assert new_product.price == 7000
+        assert new_product.quantity == 35
+
+        # Тесты для класса Smartphone
+
+    def test_smartphone_init(smartphone):
+        assert smartphone.name == 'iPhone X'
+        assert smartphone.description == 'Смартфон Apple'
+        assert smartphone.price == 50000
+        assert smartphone.quantity == 15
+        assert smartphone.manufacturer == 'Apple'
+        assert smartphone.category == 'Электроника'
+        assert smartphone.performance == 'Высокая'
+        assert smartphone.model == 'X'
+        assert smartphone.storage_capacity == '128 GB'
+        assert smartphone.color == 'Черный'
+
+        # Дополнительные тесты для класса Product
+
+    def test_product_quantity_update(product):
+        initial_quantity = product.quantity
+        product.quantity += 10
+        assert product.quantity == initial_quantity + 10
+
+    def test_product_price_update(product):
+        initial_price = product.price
+        product.price *= 1.05  # Увеличение цены на 5%
+        assert product.price == round(initial_price * 1.05)
+
+    def test_product_description_update(product):
+        new_description = "Обновленное описание"
+        product.description = new_description
+        assert product.description == new_description
+
+        # Дополнительные тесты для класса Smartphone
+
+    def test_smartphone_color_change(smartphone):
+        smartphone.color = "Красный"
+        assert smartphone.color == "Красный"
+
+    def test_smartphone_storage_capacity_update(smartphone):
+        smartphone.storage_capacity = "256 GB"
+        assert smartphone.storage_capacity == "256 GB"
+
+    def test_smartphone_model_update(smartphone):
+        smartphone.model = "XS"
+        assert smartphone.model == "XS"
+
+        # Тесты для миксина ObjectCriationLoggerMixin
+
+    def test_object_creation_logger_mixin():
+        class TestClass(ObjectCriationLoggerMixin):
+            def __init__(self, a, b=1):
+                super().__init__(a, b=b)
+
+        obj = TestClass(42)
+        obj2 = TestClass(7, b='hello')
