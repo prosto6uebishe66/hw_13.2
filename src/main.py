@@ -48,11 +48,11 @@ class Category:
         return f'{self.name}, количество продуктов: {len(self._products)} шт.'
 
 class ObjectCriationLoggerMixin:
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self):
+        print(repr(self))
 
-        class_name = self.__class__.__name__
-
+#добавлен магический метод __repr__
+    def __repr__(self):
         args_str = ', '.join(map(str, args))
         kwargs_str = ', '.join(f'{k}={v}' for k, v in kwargs.items())
 
