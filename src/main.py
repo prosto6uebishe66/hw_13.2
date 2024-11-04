@@ -1,4 +1,5 @@
 from abc import ABC, abstractclassmethod
+from unicodedata import category
 
 
 class Category:
@@ -12,6 +13,11 @@ class Category:
             self._products = products
 
     def add_product(self, product):
+        #создаем ограничение для "корзины" если товар отсутствует на "складе"
+        #выдаст ошибку с текстом: "Нельзя добавить товар которого нет на складе"
+        if product.quantity == 0:
+            raise ValueError("Нельзя добавить товар которого нет на складе")
+
         self._products.append(product)
         self.unique_products.add(product)
         self.total_categories += 1
@@ -176,6 +182,25 @@ samsung_a12 = Smartphone(
     quantity=12,
     color='Blue Sky'
 )
+try:
+    smartphone_zero = Smartphone(
+        category="Смартфон",
+        manufacturer="Южная Корея",
+        name='Samsung_a22',
+        description='взрывной смартфон',
+        price=7000,
+        performance=8.4,
+        model='Samsung a22',
+        storage_capacity=64,
+        quantity=0,
+        color='Blue Sky'
+    )
+
+    electronics_category.add_product(smartphone_zero)
+except ValueError as e:
+    print(e)#cообщение об ошибке
+
+
 #Травы
 premium_grass_mix = Grass(
     category="Газон для сада",
@@ -201,6 +226,9 @@ eco_lawn= Grass(
 # Добавление продуктов в категории
 electronics_category.add_product(iphone_13)
 electronics_category.add_product(samsung_a12)
+#try:
+
+
 
 garden_category.add_product(premium_grass_mix)
 garden_category.add_product(eco_lawn)
