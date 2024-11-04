@@ -249,6 +249,7 @@ garden_category.add_product(eco_lawn)
 all_phone_price= iphone_13.price * iphone_13.quantity + samsung_a12.price * samsung_a12.quantity
 all_garden_price= premium_grass_mix.price * premium_grass_mix.quantity + eco_lawn.price * eco_lawn.quantity
 all_products_price = all_garden_price + all_phone_price
+#подсчет среднего ценника в категориях
 averagw_garden_price = garden_category.averge_price()
 averagw_electronics_price = electronics_category.averge_price()
 
