@@ -1,4 +1,5 @@
 from abc import ABC, abstractclassmethod
+from itertools import product
 from unicodedata import category
 
 
@@ -52,6 +53,16 @@ class Category:
     def __str__(self):
 
         return f'{self.name}, количество продуктов: {len(self._products)} шт.'
+
+    def averge_price(self):
+        total_price = sum(product.price for product in self._products)
+
+        try:
+            average_price = total_price/len(self._products)
+        except ZeroDivisionError:
+            average_price = 0
+
+        return average_price
 
 class ObjectCriationLoggerMixin:
     def __init__(self):
@@ -238,6 +249,8 @@ garden_category.add_product(eco_lawn)
 all_phone_price= iphone_13.price * iphone_13.quantity + samsung_a12.price * samsung_a12.quantity
 all_garden_price= premium_grass_mix.price * premium_grass_mix.quantity + eco_lawn.price * eco_lawn.quantity
 all_products_price = all_garden_price + all_phone_price
+averagw_garden_price = garden_category.averge_price()
+averagw_electronics_price = electronics_category.averge_price()
 
 print(f"Всего категорий: {all_category.__len__()}")
 print("Уникальные продукты:", electronics_category.__len__()  + garden_category.__len__())
@@ -257,3 +270,5 @@ print(Product(eco_lawn.name, eco_lawn.description, eco_lawn.price, eco_lawn.quan
 print(f'Садовые товары, количество продуктов: {garden_category.__len__()}')
 print(f'Электроника, количество продуктов: {electronics_category.__len__()}')
 print(f'Всего на складе продукции на {all_products_price}р')
+print(f'средняя ценник продуктов для сада = {averagw_garden_price}р')
+print(f'средняя ценник электро продуктов = {averagw_electronics_price}р')
